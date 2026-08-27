@@ -1,0 +1,14 @@
+{
+  "brand": "SURFwave Studio",
+  "display_name": "SURFwave",
+  "descriptor": "Studio",
+  "colors": {
+    "primary_dark": {"name": "Deep Shore", "hex": "#403742", "role": "Primary brand / dark UI anchor"},
+    "primary_accent": {"name": "Coastal Blue", "hex": "#89B5CC", "role": "Primary accent / active states"},
+    "light_neutral": {"name": "Mist", "hex": "#E2DCE8", "role": "Light surfaces / soft backgrounds"},
+    "secondary": {"name": "Ocean Depth", "hex": "#56548C", "role": "Secondary accent / model tools"},
+    "support": {"name": "Twilight", "hex": "#6D6380", "role": "Supporting panels / hover states"}
+  },
+  "wordmark": {"rule": "SURFwave is the headliner. Studio is always subordinate and should never compete in size or weight."},
+  "typography": {"wordmark": "Custom artwork", "ui": "-apple-system, BlinkMacSystemFont, SF Pro Display, Inter, sans-serif"}
+}
