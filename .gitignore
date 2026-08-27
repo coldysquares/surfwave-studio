@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Local runtime / model data
+runtime/
+logs/
+*.wav
+*.flac
+*.mp3
+*.m4a
+*.tfrecord
+*.ckpt*
+
+# Build artifacts
+build/
+dist/
+*.dmg
+*.zip
+
+# User project data is never source
+SURFWAVE_STUDIO/
+DDSPVoiceLab/
