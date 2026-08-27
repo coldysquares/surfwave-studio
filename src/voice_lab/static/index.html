@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SURFwave Voice Lab</title>
+  <link rel="icon" href="/static/brand/favicon.ico" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand">
+      <img class="brand-mark" src="/static/brand/mark-white.png" alt="">
+      <div class="brand-copy"><img class="brand-headliner" src="/static/brand/headliner-white.png" alt="SURFwave"><strong>VOICE LAB</strong><span>build reusable timbre models</span></div>
+    </div>
+    <button id="newProjectBtn" class="primary">+ New voice model</button>
+    <div id="projectList" class="project-list"></div>
+    <div class="env" id="env"></div>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1 id="title">Voice Lab</h1>
+        <p id="subtitle">A dedicated model room: prepare clean recordings, train once, then render new performances through the learned timbre.</p>
+      </div>
+      <div id="statusPill" class="pill">no project selected</div>
+    </header>
+
+    <div id="workflow" class="workflow" aria-label="Voice model workflow">
+      <div class="workflow-step" id="wfRecordings"><b>1</b><span><strong>Recordings</strong><small>Add clean singing</small></span></div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step" id="wfDataset"><b>2</b><span><strong>Prepare data</strong><small>Analyze + build dataset</small></span></div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step" id="wfModel"><b>3</b><span><strong>Train model</strong><small>Learn your timbre</small></span></div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step" id="wfUse"><b>4</b><span><strong>Use model</strong><small>Render new performances</small></span></div>
+    </div>
+
+    <nav class="tabs" aria-label="Voice Lab tools">
+      <button data-tab="data" class="active">RECORDINGS + DATA</button>
+      <button data-tab="train">TRAIN MODEL</button>
+      <button data-tab="render">USE MODEL</button>
+      <button data-tab="export">BACKUP + EXPORT</button>
+    </nav>
+
+    <section id="tab-data" class="tab active">
+      <div class="grid two">
+        <div class="card">
+          <h2>Add training recordings</h2>
+          <p class="muted">Dry, monophonic WAV. 44.1/48 kHz is fine; Voice Lab keeps your originals and prepares a 16 kHz DDSP training dataset from them.</p>
+          <label class="drop">
+            <input id="trainingFiles" type="file" accept=".wav,audio/wav" multiple />
+            <strong>Drop WAV files here</strong>
+            <span>or click to choose files</span>
+          </label>
+          <div class="metric-row">
+            <div><b id="minutes">0.0</b><span>minutes</span></div>
+            <div><b id="fileCount">0</b><span>files</span></div>
+            <div><b id="datasetGrade">—</b><span>coverage</span></div>
+          </div>
+          <div class="explain-box"><strong>Preparing is not training.</strong><span>This analyzes your WAVs and builds training examples. When it finishes, the voice model still has not learned anything yet.</span></div>
+          <button id="prepareBtn" class="primary wide">ANALYZE + PREPARE DATASET</button>
+          <div id="prepareStatus" class="stage-status">Dataset has not been prepared yet.</div>
+          <details class="activity"><summary>Preparation details</summary><pre id="prepareLog">No preparation job has run yet.</pre></details>
+        </div>
+        <div class="card">
+          <h2>Dataset coverage</h2>
+          <div class="coverage">
+            <div><span>10 min minimum</span><i id="cov10"></i></div>
+            <div><span>15 min target</span><i id="cov15"></i></div>
+          </div>
+          <p class="note">Good data is not “one song fifteen times.” Cover pitch, vowels, glides, soft phonation, belts, consonant attacks, and breath.</p>
+          <div id="sourceList" class="source-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-train" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>Train the voice model</h2>
+          <div id="trainGate" class="explain-box"><strong>Prepare your dataset first.</strong><span>Training is the separate step where DDSP actually learns your voice.</span></div>
+          <div class="field"><label>Target total training steps</label><input id="steps" type="number" min="1000" max="500000" value="30000"></div>
+          <div class="field"><label>Batch size</label><select id="batch"><option>16</option><option>8</option><option>4</option><option>32</option></select></div>
+          <div class="spec-grid">
+            <div><span>Model SR</span><b>16 kHz</b></div>
+            <div><span>Control rate</span><b>50 Hz</b></div>
+            <div><span>Harmonics</span><b>60</b></div>
+            <div><span>Noise bands</span><b>65</b></div>
+          </div>
+          <button id="trainBtn" class="primary wide">START MODEL TRAINING — 30,000 STEPS</button>
+          <p class="muted">This is the actual learning stage. Same project = resumes from its latest checkpoint automatically; the target is total steps, not additional steps.</p>
+        </div>
+        <div class="card log-card">
+          <div class="log-head"><h2 id="logTitle">Training log</h2><button id="stopBtn" class="ghost">Stop</button></div>
+          <pre id="log">No training job has run yet.</pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-render" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>Use the trained model</h2>
+          <p class="muted">Training is finished separately. Now give the trained model a new monophonic performance to drive it: vocal, whistle, or instrument line.</p>
+          <div id="renderGate" class="explain-box"><strong>Model required.</strong><span>Finish or resume training until a checkpoint exists before rendering.</span></div>
+          <div class="field">
+            <label>Incoming from Surfwave Studio</label>
+            <select id="incomingRender"><option value="">No incoming Surfwave Studio takes</option></select>
+          </div>
+          <label class="drop compact">
+            <input id="renderFile" type="file" accept=".wav,audio/wav" />
+            <strong>Or choose a source WAV</strong>
+            <span id="renderFileName">nothing loaded</span>
+          </label>
+          <div class="field">
+            <label>Pitch shift <span id="pitchVal">0 st</span></label>
+            <input id="pitch" type="range" min="-24" max="24" step="1" value="0">
+          </div>
+          <div class="field">
+            <label>Harmonic channel <span id="harmVal">100%</span></label>
+            <input id="harmonic" type="range" min="0" max="200" step="1" value="100">
+          </div>
+          <div class="field">
+            <label>Noise / breath channel <span id="noiseVal">100%</span></label>
+            <input id="noise" type="range" min="0" max="200" step="1" value="100">
+          </div>
+          <label class="check"><input id="reverb" type="checkbox"> include learned reverb</label>
+          <button id="renderBtn" class="primary wide">Render through my voice</button>
+        </div>
+        <div class="card">
+          <h2>Renders</h2>
+          <div id="renderList" class="renders"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-export" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>Back up the trained model</h2>
+          <p>Your trained checkpoint is the reusable voice model used by Voice Lab and Surfwave Studio.</p>
+          <a id="downloadModelBundle" class="download hidden">Download checkpoint bundle</a>
+          <hr>
+          <p class="muted">Optional legacy experiment: build a decoder-only <code>vst_stateless_predict_controls</code> TFLite file. Surfwave Studio does not need this.</p>
+          <button id="exportBtn" class="ghost wide">Build experimental TFLite</button>
+          <a id="downloadExport" class="download hidden">Download experimental TFLite ZIP</a>
+        </div>
+        <div class="card">
+          <h2>What should I keep?</h2>
+          <p class="muted">The checkpoint bundle is the important backup: it contains the trained weights and operative Gin configuration, but not your source recordings.</p>
+          <p class="note">Magenta's separate DDSP-VST repository was archived in 2024, so the native Apple-Silicon install does not depend on its old export-only packages. Use Voice Lab's Render tab for the supported local workflow.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <h2>New voice model</h2>
+    <input id="projectName" placeholder="e.g. Nick Voice 01" />
+    <div class="modal-actions"><button id="cancelModal" class="ghost">Cancel</button><button id="createProject" class="primary">Create</button></div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
